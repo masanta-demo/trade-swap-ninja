@@ -1,13 +1,14 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Coin, getCoinById, formatPrice, formatNumber, generateHistoricalData } from '@/lib/cryptoData';
+import { Coin, formatPrice, formatNumber } from '@/lib/cryptoData';
+import { fetchCoinById, fetchHistoricalData } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PriceChart from '@/components/PriceChart';
 import { ArrowLeft, ExternalLink, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import SwapInterface from '@/components/SwapInterface';
+import { useToast } from '@/components/ui/use-toast';
 
 const CoinDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,27 +16,49 @@ const CoinDetail = () => {
   const [loading, setLoading] = useState(true);
   const [historicalData, setHistoricalData] = useState<number[]>([]);
   const [timeframe, setTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('7d');
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (id) {
-      // In a real app, we'd fetch this data from an API
-      const fetchedCoin = getCoinById(id);
-      setCoin(fetchedCoin || null);
+    const getCoinData = async () => {
+      if (!id) return;
       
-      // Generate mock historical data
-      const days = timeframe === '1d' ? 24 : 
-                  timeframe === '7d' ? 7 : 
-                  timeframe === '30d' ? 30 : 90;
-      
-      const volatility = timeframe === '1d' ? 0.02 : 
-                        timeframe === '7d' ? 0.05 : 
-                        timeframe === '30d' ? 0.1 : 0.15;
-                        
-      setHistoricalData(generateHistoricalData(days, volatility));
-      
-      setLoading(false);
-    }
-  }, [id, timeframe]);
+      try {
+        setLoading(true);
+        
+        // Get coin details
+        const coinData = await fetchCoinById(id);
+        if (!coinData) {
+          toast({
+            title: "Error",
+            description: "Failed to load coin data. Coin not found.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        setCoin(coinData);
+        
+        // Get historical price data based on timeframe
+        const days = timeframe === '1d' ? 1 : 
+                     timeframe === '7d' ? 7 : 
+                     timeframe === '30d' ? 30 : 90;
+        
+        const historicalPrices = await fetchHistoricalData(id, days);
+        setHistoricalData(historicalPrices);
+      } catch (error) {
+        console.error("Failed to fetch coin data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load cryptocurrency data. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getCoinData();
+  }, [id, timeframe, toast]);
 
   if (loading) {
     return (
@@ -75,7 +98,7 @@ const CoinDetail = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <Link to="/" className="inline-flex items-center text-crypto-purple hover:underline mb-6">
+        <Link to="/markets" className="inline-flex items-center text-crypto-purple hover:underline mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Markets
         </Link>
@@ -204,7 +227,11 @@ const CoinDetail = () => {
             <div className="crypto-card p-6">
               <h2 className="text-lg font-bold mb-4">About {coin.name}</h2>
               <p className="text-gray-700 leading-relaxed">
-                {coin.description || `No description available for ${coin.name}.`}
+                {coin.description ? (
+                  <div dangerouslySetInnerHTML={{ __html: coin.description }} />
+                ) : (
+                  `No description available for ${coin.name}.`
+                )}
               </p>
             </div>
           </div>

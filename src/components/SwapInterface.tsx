@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowDown, Wallet } from 'lucide-react';
-import { Coin, getAllCoins, formatPrice } from '@/lib/cryptoData';
+import { Coin, formatPrice } from '@/lib/cryptoData';
+import { fetchAllCoins } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 
 const SwapInterface = () => {
   const [coins, setCoins] = useState<Coin[]>([]);
+  const [loading, setLoading] = useState(true);
   const [fromCoin, setFromCoin] = useState<string>('bitcoin');
   const [toCoin, setToCoin] = useState<string>('ethereum');
   const [fromAmount, setFromAmount] = useState<string>('0.1');
@@ -17,15 +19,47 @@ const SwapInterface = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchedCoins = getAllCoins();
-    setCoins(fetchedCoins);
-  }, []);
+    const getCoins = async () => {
+      try {
+        setLoading(true);
+        const fetchedCoins = await fetchAllCoins();
+        setCoins(fetchedCoins);
+        
+        // Set defaults after coins are loaded
+        if (fetchedCoins.length > 0) {
+          setFromCoin(fetchedCoins[0].id);
+          if (fetchedCoins.length > 1) {
+            setToCoin(fetchedCoins[1].id);
+          }
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch coins for swap:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load cryptocurrency data. Please try again later.",
+          variant: "destructive",
+        });
+        setLoading(false);
+      }
+    };
+
+    getCoins();
+    
+    // Refresh data every 30 seconds
+    const intervalId = setInterval(() => {
+      getCoins();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, [toast]);
 
   useEffect(() => {
     if (fromCoin && toCoin) {
       calculateExchangeRate();
     }
-  }, [fromCoin, toCoin]);
+  }, [fromCoin, toCoin, coins]);
 
   useEffect(() => {
     if (fromAmount && exchangeRate) {
@@ -85,6 +119,42 @@ const SwapInterface = () => {
       });
     }
   };
+
+  // Show loading UI if coins are still loading
+  if (loading) {
+    return (
+      <div className="crypto-card p-6 max-w-md mx-auto animate-pulse">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-6 w-32 bg-gray-200 rounded"></div>
+          <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="h-4 w-16 bg-gray-200 rounded mb-4"></div>
+            <div className="flex space-x-4">
+              <div className="w-1/2 h-10 bg-gray-200 rounded"></div>
+              <div className="w-1/2 h-10 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="h-4 w-16 bg-gray-200 rounded mb-4"></div>
+            <div className="flex space-x-4">
+              <div className="w-1/2 h-10 bg-gray-200 rounded"></div>
+              <div className="w-1/2 h-10 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+          
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="crypto-card p-6 max-w-md mx-auto">
