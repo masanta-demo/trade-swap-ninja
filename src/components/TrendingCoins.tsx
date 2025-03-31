@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Coin } from '@/lib/cryptoData';
+import { Coin, getTrendingCoins as getMockTrendingCoins } from '@/lib/cryptoData';
 import { fetchTrendingCoins } from '@/lib/api';
 import CoinCard from './CoinCard';
 import { Flame } from 'lucide-react';
@@ -16,13 +16,26 @@ const TrendingCoins = () => {
       try {
         setLoading(true);
         const coins = await fetchTrendingCoins();
-        setTrendingCoins(coins);
+        
+        if (coins && coins.length > 0) {
+          setTrendingCoins(coins);
+        } else {
+          // Fallback to mock data if API returns empty array
+          const mockCoins = getMockTrendingCoins();
+          setTrendingCoins(mockCoins);
+          console.log("Using mock trending coins data as fallback");
+        }
       } catch (error) {
         console.error("Failed to fetch trending coins:", error);
+        // Fallback to mock data on error
+        const mockCoins = getMockTrendingCoins();
+        setTrendingCoins(mockCoins);
+        console.log("Using mock trending coins data as fallback");
+        
         toast({
-          title: "Error",
-          description: "Failed to load trending coins. Please try again later.",
-          variant: "destructive",
+          title: "API Limit Reached",
+          description: "Using demo data for trending coins. Real API data will be available later.",
+          variant: "default",
         });
       } finally {
         setLoading(false);
