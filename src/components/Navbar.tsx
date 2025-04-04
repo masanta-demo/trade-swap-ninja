@@ -1,9 +1,10 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Search, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthModal from './AuthModal';
+import SearchCommand from './SearchCommand';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,14 +46,7 @@ const Navbar = () => {
           <Link to="/swap" className="font-medium hover:text-crypto-purple transition-colors">
             Swap
           </Link>
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-crypto-purple/50 w-40 transition-all duration-300 focus:w-60"
-            />
-          </div>
+          <SearchCommand />
         </div>
 
         {/* Authentication Buttons */}
@@ -84,13 +78,8 @@ const Navbar = () => {
             <Link to="/swap" className="font-medium py-2 hover:text-crypto-purple" onClick={() => setIsMenuOpen(false)}>
               Swap
             </Link>
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-crypto-purple/50 w-full"
-              />
+            <div className="mb-4">
+              <SearchCommand />
             </div>
             <div className="flex flex-col space-y-2">
               <Button variant="outline" onClick={openLoginModal} className="w-full justify-center">

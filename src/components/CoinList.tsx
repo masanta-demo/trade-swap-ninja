@@ -5,6 +5,7 @@ import { ArrowUpDown, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PriceChart from './PriceChart';
 import { useToast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
 
 const CoinList = () => {
   const [coins, setCoins] = useState<Coin[]>([]);
@@ -99,7 +100,7 @@ const CoinList = () => {
     <div className="w-full">
       <div className="mb-6 relative">
         <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-        <input
+        <Input
           type="text"
           placeholder="Search coins..."
           className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-crypto-purple/30"
@@ -139,7 +140,7 @@ const CoinList = () => {
                   <td className="px-4 py-4 text-right"><div className="h-4 w-16 bg-gray-200 rounded ml-auto"></div></td>
                   <td className="px-4 py-4 text-right hidden md:table-cell"><div className="h-4 w-24 bg-gray-200 rounded ml-auto"></div></td>
                   <td className="px-4 py-4 text-right hidden lg:table-cell"><div className="h-4 w-24 bg-gray-200 rounded ml-auto"></div></td>
-                  <td className="px-4 py-4 hidden md:table-cell">
+                  <td className="px-4 py-4 text-right hidden md:table-cell">
                     <div className="w-24 h-10 bg-gray-200 rounded ml-auto"></div>
                   </td>
                 </tr>
